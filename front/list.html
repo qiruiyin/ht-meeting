@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Your title">
+	<meta name="format-detection" content="telephone=no">
+	<title>会议信息列表</title>
+	<link rel="stylesheet" type="text/css" href="./pkgs/bootstrap-3.3.0/css/bootstrap.min.css">
+</head>
+<body>
+	<a href="write.html">新增</a>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>日期</th>
+				<th>时间区间</th>
+				<th>会议室</th>
+				<th>申请人</th>
+				<th>会议内容</th>
+				<th>申请部门</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr v-for="data in datas">
+				<td>{{ data.date }}</td>
+				<td>{{ data.starttime }}-{{ data.endtime }}</td>
+				<td>{{ data.address }}</td>
+				<td>{{ data.username }}</td>
+				<td>{{ data.content }}</td>
+				<td>{{ data.department }}</td>
+				<td>
+					<a href="write.html">新增</a>
+					<a class="delete" data-id="{{ data.id }}">删除</a>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+<script src="./pkgs/jquery/jquery.min.js"></script>
+<script src="./pkgs/vue/vue.min.js"></script>
+<script src="./pkgs/layer/layer.js"></script>
+<script>
+var data;
+
+$.ajax({
+	type: "get",
+	url: "http://192.168.104.47:9000/server.js?operate=select",
+	dataType: "json",
+	success: function(result){
+		data = result;
+		renderDom = new Vue({
+			el: ".table",
+			data: {
+				datas: data
+			}
+		});
+	}
+});
+
+$(document.body).on("click", ".delete", function(e){
+	e.preventDefault();
+	var $par = $(this).parent().parent();
+	$.ajax({
+		type: "post",
+		url: "http://192.168.104.47:9000/server.js?operate=delete&id=" +  $(this).attr("data-id"),
+		dataType: "json",
+		success: function(result){
+			if (result.Success) {
+				$par.remove();
+			}
+			layer.alert(result.Msg);
+		}
+	});
+});
+</script>
+</body>
+</html>

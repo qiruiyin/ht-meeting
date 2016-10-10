@@ -1,0 +1,124 @@
+[v-cloak] {
+  display: none;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+body.active .btn {
+  display: none;
+}
+
+body.active main {
+  display: block;
+}
+
+.btn {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 80px;
+  height: 80px;
+  margin: -40px -40px;
+  line-height: 80px;
+  border-radius: 80px;
+  color: #fff;
+  background: #ee9d03;
+  text-align: center;
+  z-index: 10;
+  cursor: pointer;
+}
+
+main {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: none;
+}
+
+.video {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding-bottom: 50px;
+  z-index: -1;
+  box-sizing: border-box;
+}
+
+.video video {
+  width: 100%;
+  height: 100%;
+}
+
+.meeting {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  line-height: 50px;
+  overflow: hidden;
+  background: yellow;
+  font-size: 26px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  z-index: 11;
+}
+
+.swiper-container {
+  position: relative;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  background: -webkit-linear-gradient(left, #ee9d03, #d9b111);
+  background: linear-gradient(left, #ee9d03, #d9b111);
+  padding-right: 60px;
+  color: #fff;
+}
+
+.swiper-container:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  background: url("../img/haitang.png") no-repeat;
+  background-position: top right;
+  background-size: contain;
+}
+
+.meeting-date {
+  width: 180px;
+  text-align: center;
+  color: #ee9d03;
+  background: #fff;
+}
+
+.meeting-content {
+  padding: 2px 0;
+  width: 100%;
+  text-align: center;
+}
+
+.meeting-content td {
+  border-left: 3px solid #fff;
+  line-height: 40px;
+}
+
+.meeting-content td:first-child {
+  border-left: 0;
+}
+

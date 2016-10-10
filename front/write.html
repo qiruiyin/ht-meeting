@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Your title">
+	<meta name="format-detection" content="telephone=no">
+	<title>修改数据</title>
+	<link rel="stylesheet" type="text/css" href="./pkgs/bootstrap-3.3.0/css/bootstrap.min.css">
+	<style type="text/css">
+		h3 {
+			text-align: center;
+		}
+		form {
+			width: 600px;
+			margin: 0 auto;
+			margin-top: 50px;
+		}
+	</style>
+</head>
+<body>
+	<a href="list.html">所有未开的会议</a>
+
+	<h3>会议信息录入</h3>
+	<form class="form-horizontal" role="form">
+		<div class="form-group">
+			<label class="col-sm-2 control-label">日期：</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="date" type="text" placeholder="日期" onClick="WdatePicker({dateFmt:'yyyy年MM月dd日', maxDate:'#F{$dp.$D(\'endTime\')}'})">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">开始时间：</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="startTime" name="startTime" type="text" placeholder="开始时间" onClick="WdatePicker({dateFmt:'H点mm分',maxDate:'#F{$dp.$D(\'endTime\')}'})">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">结束时间：</label>
+			<div class="col-sm-10">
+				<input class="form-control" id="endTime" name="endTime" type="text" placeholder="结束时间" onClick="WdatePicker({dateFmt:'H点mm分', minDate:'#F{$dp.$D(\'startTime\')}'})">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">大会议室：</label>
+			<div class="col-sm-10">
+				<select class="form-control" name="address">
+					<option value="大会议室">大会议室</option>
+					<option value="录演厅">录演厅</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">申请人：</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="username" type="text" placeholder="申请人">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">内容：</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="content" type="text" placeholder="内容">
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="col-sm-2 control-label">部门：</label>
+			<div class="col-sm-10">
+				<input class="form-control" name="department" type="text" placeholder="部门">
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-offset-2 col-sm-10">
+				<a class="btn btn-default">提交</a>
+		    </div>
+		</div>
+	</form>
+
+<script src="./pkgs/jquery/jquery.min.js"></script>
+<script src="./pkgs/layer/layer.js"></script>
+<script src="./pkgs/My97DatePicker/WdatePicker.js"></script>
+<script>
+$(".btn").on("click", function(e){
+	e.preventDefault();
+	var status = 0;
+	$("input").each(function(){
+		if ($(this).val() == '') {
+			status = 1;
+			layer.alert($(this).attr("placeholder") + "不能为空");
+			return false;
+		}
+	});
+	if (status) return;
+
+	var data = $("form").serialize();
+	$.ajax({
+		url: "http://192.168.104.47:9000/server.js",
+		type: "get",
+		dataType: "json",
+		data: data,
+		success: function(result){
+			if(result.status){
+				layer.alert(result.msg);
+			} else {
+				layer.alert(result.msg);
+			}
+		}
+	});
+});
+</script>
+</body>
+</html>
