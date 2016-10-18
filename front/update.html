@@ -28,12 +28,12 @@
 				<li><a href="setting.html">系统设置</a></li>
 			</ul>
 		</div>
-		<div class="ht-content">	
+		<div class="ht-content">
 			<ul class="nav nav-tabs" role="tablist">
-				<li role="presentation"><a href="listAll.html">所有会议</a></li>
-				<li role="presentation" class="active"><a href="write.html">新增会议</a></li>
+				<li role="presentation" class="active"><a href="listAll.html">所有会议</a></li>
+				<li role="presentation"><a href="write.html">新增会议</a></li>
 			</ul>
-			
+
 			<div class="panel panel-default">
 				<div class="panel-heading">会议室占用表</div>
 				<div class="panel-body">
@@ -67,59 +67,67 @@
 					</table>
 				</div>
 			</div>
-			
-			<form class="form-horizontal" role="form">
+
+			<form id="form" class="form-horizontal" role="form" v-cloak>
 				<div class="form-group">
-					<label class="col-sm-2 control-label">大会议室：</label>
+					<label class="col-sm-2 control-label">会议室：</label>
 					<div class="col-sm-10">
 						<select class="form-control meeting-room" name="meeting_room">
-							<option value="大会议室">大会议室</option>
-							<option value="录演厅">录演厅</option>
+							<template v-for="option in meeting_room">
+						        <option :value="option.room" v-if="option.room == data.meeting_room" selected>
+						            {{ option.room }}
+						        </option>
+						        <option :value="option.room" v-else>
+						            {{ option.room }}
+						        </option>
+						    </template>
 						</select>
 					</div>
 				</div>
 				<div class="form-group">
 					<label class="col-sm-2 control-label">日期：</label>
 					<div class="col-sm-10">
-						<input class="form-control meeting-date" name="meeting_date" type="text" placeholder="日期">
+						<input class="form-control meeting-date" name="meeting_date" type="text" placeholder="日期" value="{{ data.meeting_date }}">
 					</div>
 				</div>
 				<div class="form-group">
 					<label class="col-sm-2 control-label">开始时间：</label>
 					<div class="col-sm-10">
-						<input class="form-control" id="startTime" name="starttime" type="text" placeholder="开始时间">
+						<input class="form-control" id="startTime" name="starttime" type="text" placeholder="开始时间" value="{{ data.starttime }}">
 					</div>
 				</div>
 				<div class="form-group">
 					<label class="col-sm-2 control-label">结束时间：</label>
 					<div class="col-sm-10">
-						<input class="form-control" id="endTime" name="endtime" type="text" placeholder="结束时间" >
+						<input class="form-control" id="endTime" name="endtime" type="text" placeholder="结束时间"  value="{{ data.endtime }}">
 					</div>
 				</div>
+				
 				<div class="form-group">
 					<label class="col-sm-2 control-label">申请人：</label>
 					<div class="col-sm-10">
-						<input class="form-control" name="proposer" type="text" placeholder="申请人">
+						<input class="form-control" name="proposer" type="text" placeholder="申请人" value="{{ data.proposer }}">
 					</div>
 				</div>
 				<div class="form-group">
 					<label class="col-sm-2 control-label">内容：</label>
 					<div class="col-sm-10">
-						<input class="form-control" name="meeting_intro" type="text" placeholder="内容">
+						<input class="form-control" name="meeting_intro" type="text" placeholder="内容" value="{{ data.meeting_intro }}">
 					</div>
 				</div>
 				<div class="form-group">
 					<label class="col-sm-2 control-label">部门：</label>
 					<div class="col-sm-10">
-						<input class="form-control" name="department" type="text" placeholder="部门">
+						<input class="form-control" name="department" type="text" placeholder="部门" value="{{ data.department }}">
 					</div>
 				</div>
 				<div class="form-group">
 					<div class="col-sm-offset-2 col-sm-10">
-						<a class="btn btn-default">提交</a>
+						<a class="btn btn-default form-submit">提交</a>
+						<a class="btn btn-default" href="listAll.html" style="margin-left: 20px;">取消</a>
 				    </div>
 				</div>
-			</form>	
+			</form>
 		</div>
 	</div>
 </div>
@@ -129,9 +137,28 @@
 <script src="./pkgs/layer/layer.js"></script>
 <script src="./pkgs/My97DatePicker/WdatePicker.js"></script>
 <script src="./js/common.js"></script>
-<script src="./js/form.js"></script>
 <script>
-$(".btn").on("click", function(e){
+var data_id =  location.search.replace("?id=",""),
+	renderDomForm;
+
+$.ajax({
+	type: "get",
+	url: "http://192.168.104.47:9000/server.js?operate=select&id=" + data_id,
+	dataType: "json",
+	success: function(result){
+		data = result.Data[0];
+		renderDomForm = new Vue({
+			el: "#form",
+			data: {
+				data: data,
+				meeting_room: [{"room": "大会议室"}, {"room": "录演厅"}]
+			}
+		});
+		$.getScript("./js/form.js")
+	}
+});
+
+$(".form-submit").on("click", function(e){
 	e.preventDefault();
 	var status = 0;
 	$("input").each(function(){
@@ -142,16 +169,15 @@ $(".btn").on("click", function(e){
 				yes: function(){
 					layer.closeAll();
 				}
-			})
+			});
 			return false;
 		}
 	});
 	if (status) return;
 
 	var data = $("form").serialize().replace(/\+/g, "");
-	
 	$.ajax({
-		url: "http://192.168.104.47:9000/server.js?operate=add",
+		url: "http://192.168.104.47:9000/server.js?operate=update&id=" + data_id,
 		type: "get",
 		dataType: "json",
 		data: data,
@@ -175,5 +201,6 @@ $(".btn").on("click", function(e){
 	});
 });
 </script>
+
 </body>
 </html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-title" content="Your title">
+	<meta name="format-detection" content="telephone=no">
+	<title>会议信息列表</title>
+	<link rel="stylesheet" type="text/css" href="./pkgs/bootstrap-3.3.0/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="./css/common.css">
+</head>
+<body>
+<div class="ht-container">
+	<div class="ht-container-header">
+		<div class="logo">
+			<img src="./img/logo.png">	
+		</div>
+		金海棠多媒体展示系统
+		<a class="exit">退出</a>
+		<a target="_blank" href="index.html">预览</a>
+	</div>
+	<div class="ht-container-body">
+		<div class="ht-menu">
+			<ul>
+				<li class="active"><a href="listAll.html">信息管理</a></li>
+				<li><a href="setting.html">系统设置</a></li>
+			</ul>
+		</div>
+		<div class="ht-content" v-cloak>
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active"><a href="listAll.html">所有会议</a></li>
+				<li role="presentation"><a href="write.html">新增会议</a></li>
+			</ul>
+
+			<div class="btn-group">
+				<button type="button" class="btn btn-default btn-primary" data-name="all" data-status="-1">所有会议</button>
+				<button type="button" class="btn btn-default" data-name="not" data-status="0">未召开</button>
+				<button type="button" class="btn btn-default" data-name="now" data-status="1">正在开</button>
+				<button type="button" class="btn btn-default" data-name="alerady" data-status="2">已召开</button>
+			</div>
+
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<th>编号</th>
+						<th>日期</th>
+						<th>时间区间</th>
+						<th>会议室</th>
+						<th>申请人</th>
+						<th>会议简介</th>
+						<th>申请部门</th>
+						<th>会议状态</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="data in datas">
+						<td>{{ $index + pageSize*(page - 1) + 1 }}</td>
+						<td>{{ data.meeting_date }}</td>
+						<td>{{ data.starttime }}-{{ data.endtime }}</td>
+						<td>{{ data.meeting_room }}</td>
+						<td>{{ data.proposer }}</td>
+						<td>{{ data.meeting_intro }}</td>
+						<td>{{ data.department }}</td>
+						<template v-if="data.meeting_status == 0">
+							<td>未开</td>
+							<td>
+								<a class="btn btn-primary" href="update.html?id={{ data.id }}">修改</a>
+								<a class="btn btn-primary delete" data-id="{{ data.id }}">删除</a>
+							</td>
+							
+						</template>
+						<template v-else> 
+							<template v-if="data.meeting_status == 1">
+								<td>正在开</td>
+								<td>
+									<a class="btn btn-default edit disabled" href="update.html?id={{ data.id }}">修改</a>
+									<a class="btn btn-default delete disabled" data-id="{{ data.id }}">删除</a>
+								</td>
+							</template>
+							<template v-else>
+								<td>已开</td>
+								<td>
+									<a class="btn btn-default edit disabled" href="update.html?id={{ data.id }}">修改</a>
+									<a class="btn btn-default delete disabled" data-id="{{ data.id }}">删除</a>
+								</td>
+							</template>
+						</template>
+					</tr>
+				</tbody>
+			</table>
+			<zpagenav :page="page", :page-size="pageSize", :total="total", :max-link.sync="maxLink" :event-name="eventName" :create-url="createUrl"><zpagenav>
+		</div>
+	</div>
+</div>
+
+<script src="./pkgs/jquery/jquery.min.js"></script>
+<script src="./pkgs/vue/vue.min.js"></script>
+<script src="./pkgs/vue-pagenav/vue-pagenav.min.js"></script>
+<script src="./pkgs/layer/layer.js"></script>
+<script src="./js/common.js"></script>
+<script>
+var data, renderDom,
+	pagesize = 10;
+Vue.use(zPagenav);
+
+$.ajax({
+	type: "get",
+	url: "http://192.168.104.47:9000/server.js?operate=select&page=1&pagesize=" + pagesize,
+	dataType: "json",
+	success: function(result){
+		data = result.Data;
+
+		renderDom = new Vue({
+			el: ".ht-content",
+			data: {
+				datas: data,
+				meeting_status: 1,
+				page: 1,
+				pageSize: pagesize,
+				total: result.Count,
+				maxLink: 8,
+				eventName: 'custom' 
+			},
+			events: {
+				'custom': function(page) {
+					this.page = page;
+					refreshData(page);
+				}
+			}
+		});
+
+	}
+});
+
+function refreshData(page){
+	$.ajax({
+		type: "get",
+		url: "http://192.168.104.47:9000/server.js?operate=select&pagesize=" + pagesize + "&page=" + page,
+		dataType: "json",
+		success: function(result){
+			renderDom.datas = result.Data;
+		}
+	});
+}
+
+$(".btn-group .btn").on("click", function(){
+	var name = $(this).attr("data-name"),
+		meeting_status = $(this).attr("data-status");
+
+	$(this).siblings().removeClass("btn-primary");
+	$(this).addClass("btn-primary");
+
+	if (name == "all") {
+		$.ajax({
+			type: "get",
+			url: "http://192.168.104.47:9000/server.js?operate=select&selectstatus=-1&page=1&pagesize=" + pagesize,
+			dataType: "json",
+			success: function(result){
+				renderDom.datas = result.Data;
+				renderDom.total = result.Count;
+				renderDom.meeting_status = meeting_status;
+			}
+		});
+	} else {
+		$.ajax({
+			type: "get",
+			url: "http://192.168.104.47:9000/server.js?operate=select&&selectstatus=" + meeting_status + "&page=1&pagesize=" + pagesize,
+			dataType: "json",
+			success: function(result){
+				renderDom.datas = result.Data;
+				renderDom.total = result.Count;
+				renderDom.meeting_status = meeting_status;
+			}
+		});
+	}
+});
+
+$(document.body).on("click", ".edit", function(e){
+	e.preventDefault();
+	if ($(this).hasClass("disabled")) return;
+});
+
+$(document.body).on("click", ".delete", function(e){
+	e.preventDefault();
+	if ($(this).hasClass("disabled")) return;
+
+	var $par = $(this).parent().parent(),
+		id = $(this).attr("data-id");
+
+	layer.alert("确定删除？", {
+		title: tips_info.layer_title,
+		btn: ['确定', '取消'],
+		yes: function(index) {
+			$.ajax({
+				type: "post",
+				url: "http://192.168.104.47:9000/server.js?operate=delete&id=" + id,
+				dataType: "json",
+				success: function(result){
+					if (result.Success) {
+						refreshData(renderDom.page);
+					} else {
+						layer.alert(result.Msg, {
+							title: tips_info.layer_title,
+							yes: function(index){
+								layer.close(index);
+							}
+						});
+					}
+				}
+			});
+			layer.closeAll();
+		},
+		no: function(){
+			layer.closeAll();
+		}
+	});
+	
+});
+</script>
+</body>
+</html>

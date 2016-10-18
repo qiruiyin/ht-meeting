@@ -1,0 +1,134 @@
+* {
+	box-sizing: border-box;
+}
+
+ul, li {
+	padding-left: 0;
+	list-style: none;
+}
+
+a, a:hover, a:visited, a:link {
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+a.btn-primary {
+	color: #fff;
+}
+
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+}
+
+[v-cloak] {
+	display: none;
+}
+
+form {
+	width: 600px;
+	margin-top: 30px;
+}
+
+.ht-container {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.ht-container-header {
+	width: 100%;
+	height: 70px;
+	line-height: 70px;
+	font-size: 30px;
+	color: #fff;
+	text-indent: 1em;
+	font-size: 22px;
+	background-color: #32373b; 
+}
+
+.ht-container-header > .logo {
+	float: left;
+	width: 200px;
+	height: 100%;
+	background: #181c1f;
+	
+}
+
+.ht-container-header > a {
+	float: right;
+	padding-right: 20px;
+	cursor: pointer;
+}
+
+.ht-container-header > .exit {
+	height: 100%;
+	background: #e6555c;
+	display: block;
+}
+
+.ht-container-body {
+	flex: 1;
+	display: flex;
+}
+
+.ht-menu {
+	width: 200px;
+	padding-top: 30px;
+	background-color: #292d30;
+}
+
+.ht-menu li {
+	line-height: 60px;
+	color: #fff;
+	font-size: 18px;
+	text-align: center;
+	border-bottom: 1px solid #000;
+	cursor: pointer;
+}
+
+.ht-menu li:first-child {
+	border-top: 1px solid #000;
+}
+.ht-menu li.active {
+	background: #181c1f;
+}
+
+.ht-menu li:hover {
+	background-color: #2C3E50; 
+}
+
+.ht-menu li a {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.ht-content {
+	flex: 1;
+	padding: 10px 10px 0 10px;
+	overflow: auto;
+}
+
+.btn-group, .panel {
+	margin: 20px 0 20px 0;
+}
+
+.panel {
+	width: 90%;
+	margin-left: 10px;
+	padding: 0;
+}
+
+a.disable {
+	text-decoration: line-through;
+}
+
+.pagination.page-link {
+	float: left;
+	margin-right: 20px;
+	line-height: 37px;
+}
