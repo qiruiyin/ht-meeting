@@ -1,17 +1,17 @@
 // http接口
-var http = require('http');
-var common = require('./server/common.js');
-var url = require('./server/url.js');
+var $http = require('http');
+var $common = require('./server/common.js');
+var $url = require('./server/url.js');
 var $sql = require('./server/sql.js');
-var sqlite3 = require('sqlite3');
-var db = new sqlite3.Database('./databases/JhtShow1.sqlite');
+var $sqlite3 = require('sqlite3');
+var $db = new $sqlite3.Database('./databases/JhtShow1.sqlite');
 
-var server = http.createServer(function(request, response){
+var server = $http.createServer(function(request, response){
 	response.writeHead(200,{"Content-Type":"application/json;charset=utf-8", "Access-Control-Allow-Origin":"*"});
 	// 获取参数start 
 	
 	// 获取参数end，下面可以做鉴定
-	var input_data = url.parseToJson(decodeURI(request.url));
+	var input_data = $url.parseToJson(decodeURI(request.url));
 		input_data = JSON.parse(input_data);
 	if (input_data.operate == "select") {
 		if (input_data._ == undefined) {
@@ -47,7 +47,7 @@ var server = http.createServer(function(request, response){
 				}
 			}
 			countsql = 'select count(*) as count ' + sql;
-			db.all(countsql, function(err, rows){
+			$db.all(countsql, function(err, rows){
 				if(!err) {
 					count = rows[0].count;
 					pagesql = 'select * ' + sql + ' order by starttimestamp desc';
@@ -55,7 +55,7 @@ var server = http.createServer(function(request, response){
 						pagesql += ' limit "' + input_data.pagesize + '" offset ' + (input_data.page - 1)*input_data.pagesize;
 					}
 
-					db.all(pagesql, function(err, rows){
+					$db.all(pagesql, function(err, rows){
 						if (!err) {
  							var nowTimeStamp = Date.parse(new Date());
 							for (var i = rows.length - 1; i >= 0; i--) {
@@ -84,10 +84,10 @@ var server = http.createServer(function(request, response){
 			// 所有会议分页展示end
 		} else {
 			var nowtimestamp = Date.parse(new Date());
-			db.all('select * from setting', function(err, rows){
+			$db.all('select * from setting', function(err, rows){
 				if (!err) {
 					var refreshtime = rows[0].refreshtime;
-					db.all('select * from meeting where endtimestamp >"' + nowtimestamp + '"' , function(err, rows){
+					$db.all('select * from meeting where endtimestamp >"' + nowtimestamp + '"' , function(err, rows){
 						if (!err) {
 							response.write(JSON.stringify({"Success": true, "Data": rows, "RefreshTime": refreshtime }));
 							response.end();
@@ -106,7 +106,7 @@ var server = http.createServer(function(request, response){
 		}
 		
 	} else if (input_data.operate == "delete") {
-		db.run('delete from meeting where id = "' + input_data.id + '"', function(err){
+		$db.run('delete from meeting where id = "' + input_data.id + '"', function(err){
 			if (!err) {
 				response.write(JSON.stringify({"Success": true, "Msg":"删除成功"}));
 				response.end();
@@ -117,8 +117,8 @@ var server = http.createServer(function(request, response){
 			}
 		});
 	} else if (input_data.operate == "update") {
-		var startTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.starttime),
-			endTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.endtime),
+		var startTimeStamp = $common.getTimeStamp(input_data.meeting_date, input_data.starttime),
+			endTimeStamp = $common.getTimeStamp(input_data.meeting_date, input_data.endtime),
 			nowTimeStamp = Date.parse(new Date()),
 			sql = 'update meeting set ';
 
@@ -133,7 +133,7 @@ var server = http.createServer(function(request, response){
 			}
 
 			sql += 'starttimestamp ="' + startTimeStamp + '", endtimestamp ="' + endTimeStamp + '" where id ="' + input_data.id + '"';
-			db.run(sql, function(err){
+			$db.run(sql, function(err){
 				if (!err) {
 					response.write(JSON.stringify({"Success": true, "Msg":"数据修改成功"}));
 					response.end();
@@ -145,8 +145,8 @@ var server = http.createServer(function(request, response){
 			});
 		}
 	} else if (input_data.operate == 'add') {
-		var startTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.starttime),
-			endTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.endtime),
+		var startTimeStamp = $common.getTimeStamp(input_data.meeting_date, input_data.starttime),
+			endTimeStamp = $common.getTimeStamp(input_data.meeting_date, input_data.endtime),
 			nowTimeStamp = Date.parse(new Date()),
 			insertMsg = {}; // 返回信息
 
@@ -154,10 +154,10 @@ var server = http.createServer(function(request, response){
 			response.write(JSON.stringify({"Success": false, "Msg":"该时间已过去，不能添加"}));
 			response.end();
 		} else {
-			db.run('create table if not exists meeting("id"  INTEGER NOT NULL, "meeting_date"  TEXT, "starttime"  TEXT, "endtime"  TEXT, "meeting_room"  TEXT,"proposer"  TEXT, "department"  TEXT, "meeting_intro"  TEXT, "starttimestamp"  INTEGER, "endtimestamp"  INTEGER, PRIMARY KEY ("id"))',function(){
+			$db.run('create table if not exists meeting("id"  INTEGER NOT NULL, "meeting_date"  TEXT, "starttime"  TEXT, "endtime"  TEXT, "meeting_room"  TEXT,"proposer"  TEXT, "department"  TEXT, "meeting_intro"  TEXT, "starttimestamp"  INTEGER, "endtimestamp"  INTEGER, PRIMARY KEY ("id"))',function(){
 				var status = 1,
 					sql; // 数据是否合法
-				db.all('select meeting_date, meeting_room, starttimestamp, endtimestamp from meeting where meeting_date = "' + input_data.meeting_date + '" and meeting_room = "' + input_data.meeting_room + '" order by starttimestamp', function(err, rows){
+				$db.all('select meeting_date, meeting_room, starttimestamp, endtimestamp from meeting where meeting_date = "' + input_data.meeting_date + '" and meeting_room = "' + input_data.meeting_room + '" order by starttimestamp', function(err, rows){
 					if(!err) {
 						if(rows.length == 0) {
 							sql = 'insert into meeting ( "id",';
@@ -175,7 +175,7 @@ var server = http.createServer(function(request, response){
 							}
 							sql += '"' + startTimeStamp + '", "' + endTimeStamp + '")';
 
-							db.run(sql,function(err, res){
+							$db.run(sql,function(err, res){
 								if(!err) {
 									insertMsg.Msg = "数据更新成功";
 								} else {
@@ -188,7 +188,7 @@ var server = http.createServer(function(request, response){
 							});
 							return;	
 						} else {
-							status = common.timeIntervalOk(startTimeStamp, endTimeStamp, rows);
+							status = $common.timeIntervalOk(startTimeStamp, endTimeStamp, rows);
 						}
 					} else {
 						status = 2;
@@ -219,7 +219,7 @@ var server = http.createServer(function(request, response){
 						}
 						sql += '"' + startTimeStamp + '", "' + endTimeStamp + '")';
 
-						db.run(sql,function(err, res){
+						$db.run(sql,function(err, res){
 							if(!err) {
 								insertMsg.Msg = "数据更新成功";
 							} else {
@@ -235,7 +235,7 @@ var server = http.createServer(function(request, response){
 			});	
 		}
 	} else if (input_data.operate == 'setting') {
-		db.all('select * from setting', function(err, rows){
+		$db.all('select * from setting', function(err, rows){
 			if (!err) {
 				response.write(JSON.stringify({"Success": true, "Data": rows, 'Msg': "数据库操作成功"}));
 				response.end();
@@ -246,7 +246,7 @@ var server = http.createServer(function(request, response){
 			}
 		});
 	} else if (input_data.operate == 'settingData') {
-		db.run('update setting set refreshtime ="' + input_data.refreshtime + '" where id = 1', function(err){
+		$db.run('update setting set refreshtime ="' + input_data.refreshtime + '" where id = 1', function(err){
 			if (!err) {
 				response.write(JSON.stringify({"Success": true, "Msg":"数据修改成功"}));
 				response.end();
@@ -258,7 +258,7 @@ var server = http.createServer(function(request, response){
 		});
 	} else if (input_data.operate == "login"){
 		var sql = 'select * from user where username ="' + input_data.username + '" and password ="' + input_data.password + '"';
-		db.all(sql, function(err, rows){
+		$db.all(sql, function(err, rows){
 			if (!err) {
 				if (rows != undefined && rows.length == 1) {
 					response.write(JSON.stringify({"Success": true, "Msg":"登录成功"}));
