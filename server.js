@@ -1,15 +1,10 @@
 // http接口
 var http = require('http');
+var common = require('./server/common.js');
 var url = require('./server/url.js');
+var $sql = require('./server/sql.js');
 var sqlite3 = require('sqlite3');
 var db = new sqlite3.Database('./databases/JhtShow1.sqlite');
-
-function timeStamp(date, time){
-	date = date.replace(/年|月/g, "-").replace(/日/g, " ");
-	time = time.replace(/点|分/g, ":");
-	time = date + time + "00";
-	return Date.parse(new Date(time));
-};
 
 var server = http.createServer(function(request, response){
 	response.writeHead(200,{"Content-Type":"application/json;charset=utf-8", "Access-Control-Allow-Origin":"*"});
@@ -18,28 +13,7 @@ var server = http.createServer(function(request, response){
 	// 获取参数end，下面可以做鉴定
 	var input_data = url.parseToJson(decodeURI(request.url));
 		input_data = JSON.parse(input_data);
-	if (input_data.operate == "selectAll") {
-		db.all('select * from meeting order by starttimestamp DESC', function(err, rows){
-			if (!err) {
-				var nowTimeStamp = Date.parse(new Date());
-				for (var i = rows.length - 1; i >= 0; i--) {
-					if (rows[i].starttimestamp > nowTimeStamp) {
-						rows[i].meeting_status = 0;
-					} else if(rows[i].endtimestamp > nowTimeStamp) {
-						rows[i].meeting_status = 1;
-					} else {
-						rows[i].meeting_status = 2;
-					}
-				}
-				response.write(JSON.stringify({"Success": true, "Data": rows}));
-				response.end();
-			} else {
-				console.log(err);
-				response.write(JSON.stringify({"Success": true, "Msg": "数据库操作失败"}));
-				response.end();
-			}
-		});
-	} else if (input_data.operate == "select") {
+	if (input_data.operate == "select") {
 		if (input_data._ == undefined) {
 			// 所有会议分页展示start
 			var nowtimestamp = Date.parse(new Date()),
@@ -49,33 +23,25 @@ var server = http.createServer(function(request, response){
 				count,
 				forststus = 0;
 			// 判断条件拼接
-			for (var item in input_data) {
-				if (item != "operate" && item != "page" && item != "pagesize" && item != "selectstatus") {
-					if (!forststus) sql += ' where ';
-					forststus = 1;
-					sql += item + '="' + input_data[item] + '" and ';
-				}
-			}
-			if(forststus) sql = sql.substring(0, sql.length - 4);
-			
+			var sql_where = $sql.whereEqual(input_data);
 			if (input_data.selectstatus == 0) {
 				// 未召开的会议
-				if (forststus) {
-					sql += ' and starttimestamp > ' + nowtimestamp;
+				if (sql_where.length > 0) {
+					sql += sql_where + ' and starttimestamp > ' + nowtimestamp;
 				} else {
 					sql += ' where starttimestamp > ' + nowtimestamp;
 				}
 			} else if (input_data.selectstatus == 1) {
 				// 正在召开的会议
-				if (forststus) {
-					sql += ' and endtimestamp > ' + nowtimestamp + ' and starttimestamp < ' + nowtimestamp;
+				if (sql_where.length > 0) {
+					sql += sql_where + ' and endtimestamp > ' + nowtimestamp + ' and starttimestamp < ' + nowtimestamp;
 				} else {
 					sql += ' where endtimestamp > ' + nowtimestamp + ' and starttimestamp < ' + nowtimestamp;
 				}
 			} else if (input_data.selectstatus == 2) {
 				// 已召开的会议
-				if (forststus) {
-					sql += ' and endtimestamp < ' + nowtimestamp;
+				if (sql_where.length > 0) {
+					sql += sql_where + ' and endtimestamp < ' + nowtimestamp;
 				} else {
 					sql += ' where endtimestamp < ' + nowtimestamp;
 				}
@@ -151,8 +117,8 @@ var server = http.createServer(function(request, response){
 			}
 		});
 	} else if (input_data.operate == "update") {
-		var startTimeStamp = timeStamp(input_data.meeting_date, input_data.starttime),
-			endTimeStamp = timeStamp(input_data.meeting_date, input_data.endtime),
+		var startTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.starttime),
+			endTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.endtime),
 			nowTimeStamp = Date.parse(new Date()),
 			sql = 'update meeting set ';
 
@@ -165,6 +131,7 @@ var server = http.createServer(function(request, response){
 					sql += item + '="' + input_data[item] + '", ';
 				}
 			}
+
 			sql += 'starttimestamp ="' + startTimeStamp + '", endtimestamp ="' + endTimeStamp + '" where id ="' + input_data.id + '"';
 			db.run(sql, function(err){
 				if (!err) {
@@ -178,8 +145,8 @@ var server = http.createServer(function(request, response){
 			});
 		}
 	} else if (input_data.operate == 'add') {
-		var startTimeStamp = timeStamp(input_data.meeting_date, input_data.starttime),
-			endTimeStamp = timeStamp(input_data.meeting_date, input_data.endtime),
+		var startTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.starttime),
+			endTimeStamp = common.getTimeStamp(input_data.meeting_date, input_data.endtime),
 			nowTimeStamp = Date.parse(new Date()),
 			insertMsg = {}; // 返回信息
 
@@ -221,31 +188,7 @@ var server = http.createServer(function(request, response){
 							});
 							return;	
 						} else {
-							var time = rows;
-							for (var i = time.length - 1; i >= 0; i--) {
-								if (time[i].starttimestamp < startTimeStamp) {
-									if (i == time.length - 1) {
-										if (time[i].endtimestamp <= startTimeStamp) {
-											status = 1;
-										} else {
-											status = 0;
-										}
-									} else {
-										if (time[i].endtimestamp <= startTimeStamp && time[i+1].starttimestamp >= endTimeStamp) {
-											status = 1;
-										} else {
-											status = 0;
-										}
-									}
-									break;
-								} else if (i == 0) {
-									if (time[0].starttimestamp >= endTimeStamp) {
-										status = 1;
-									} else {
-										status = 0;
-									}
-								}
-							}
+							status = common.timeIntervalOk(startTimeStamp, endTimeStamp, rows);
 						}
 					} else {
 						status = 2;
